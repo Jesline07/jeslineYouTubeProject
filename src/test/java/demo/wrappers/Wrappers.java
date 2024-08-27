@@ -14,7 +14,7 @@ public class Wrappers {
 
     public Wrappers(WebDriver driver) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(50));
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(60));
     }
 
     // Navigate to a specified URL
@@ -46,6 +46,10 @@ public class Wrappers {
             System.out.println("Element not found: " + e.getMessage());
             return null;
         }
+    }
+    public void scrollDown() {
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        js.executeScript("window.scrollBy(0,250)", "");
     }
 
     // Wait for an element to be visible and return it

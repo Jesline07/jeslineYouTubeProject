@@ -1,5 +1,6 @@
 package demo;
 
+import org.apache.xmlbeans.impl.xb.xsdschema.ListDocument.List;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
@@ -23,7 +24,7 @@ import demo.utils.ExcelDataProvider;
 import demo.wrappers.Wrappers;
 
 public class TestCases extends ExcelDataProvider {
-    private static final long timeoutInSeconds = 10; // Timeout for WebDriverWait
+    private static final long timeoutInSeconds = 50; // Timeout for WebDriverWait
     private WebDriver driver;
     private Wrappers wrapper;
     private SoftAssert softAssert;
@@ -52,36 +53,38 @@ public class TestCases extends ExcelDataProvider {
     @Test
     public void testCase01() {
         softAssert = new SoftAssert();
-
+    
         try {
             // Navigate to YouTube
             wrapper.navigateTo("https://www.youtube.com");
-
-            // Assert that we are on the correct URL
+    
+            // Wait until the URL contains 'youtube.com' and assert it
+            new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
+                    .until(ExpectedConditions.urlContains("youtube.com"));
             String currentUrl = driver.getCurrentUrl();
             softAssert.assertTrue(currentUrl.contains("youtube.com"), "URL does not contain 'youtube.com'");
-            System.out.println("URL has YouTube.com");
-            //Thread.sleep(3000);
-            System.out.println("URL has YouTube.com");
-
+            System.out.println("URL contains 'youtube.com'");
+    
             // Click on "About" using the Wrapper class with XPath expression
             By aboutLinkXPath = By.xpath("//a[@slot='guide-links-primary' and contains(text(),'About')]");
             wrapper.click(aboutLinkXPath);
-
+    
             // Wait for and print the message on the screen using Wrapper class and XPath
             By messageXPath = By.xpath("//*[@id='content' and contains(@class,'ytabout__main lb-padding-top-xl lb-padding-bottom-xl')]");
             String messageText = new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
                     .until(ExpectedConditions.visibilityOfElementLocated(messageXPath))
                     .getText();
             System.out.println("Message on the screen: " + messageText);
-
+    
         } catch (NoSuchElementException e) {
             System.out.println("Element not found: " + e.getMessage());
         }
-
+    
         // Assert all
         softAssert.assertAll();
     }
+    
+
 
     @Test
     public void testCase02() {
@@ -239,6 +242,57 @@ public class TestCases extends ExcelDataProvider {
             softAssert.assertAll();
         }
     }
+    public class YouTubeTestCases extends ExcelDataProvider {
+        private static final long timeoutInSeconds = 10;
+        @Test(dataProvider = "getData")
+        public void testCase05(String keyword) {
+            SoftAssert softAssert = new SoftAssert();
+        
+            try {
+                // Navigate to YouTube
+                wrapper.navigateTo("https://www.youtube.com");
+        
+                // Enter the keyword in the search box and submit
+                By searchBoxXPath = By.name("search_query");
+                wrapper.click(searchBoxXPath);
+                driver.findElement(searchBoxXPath).sendKeys(keyword);
+                driver.findElement(searchBoxXPath).submit();
+        
+                // Wait for the search results to load
+                By videoElementsXPath = By.xpath("//ytd-video-renderer//span[@class='view-count style-scope ytd-video-meta-block']");
+                new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
+                        .until(ExpectedConditions.visibilityOfElementLocated(videoElementsXPath));
+        
+                // Initialize the total view count
+                long totalViews = 0;
+        
+                while (totalViews < 100_000_000) { // 100 million views
+                    // Locate the first visible video element with the view count
+                    WebElement videoElement = new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
+                            .until(ExpectedConditions.visibilityOfElementLocated(videoElementsXPath));
+        
+                    // Extract the view count from the video element
+                    String viewsText = videoElement.getText().split(" ")[0]
+                            .replace(",", "").replace("K", "000").replace("M", "000000");
+                    long views = Long.parseLong(viewsText);
+        
+                    // Accumulate the views
+                    totalViews += views;
+        
+                    // Scroll down to load more videos
+                    wrapper.scrollDown();
+                }
+        
+                System.out.println("Total views for keyword '" + keyword + "' reached 10 crore.");
+        
+            } catch (Exception e) {
+                System.out.println("Error occurred while processing keyword '" + keyword + "': " + e.getMessage());
+            } finally {
+                softAssert.assertAll();
+            }
+        }
+        
+
 
     @AfterTest
     public void closeBrowser() {
@@ -247,3 +301,10 @@ public class TestCases extends ExcelDataProvider {
         }
     }
 }
+}
+
+    // public Object[][] fetchExcelData(String string) {
+    //     // TODO Auto-generated method stub
+    //     throw new UnsupportedOperationException("Unimplemented method 'fetchExcelData'");
+    // }
+

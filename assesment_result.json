@@ -12,6 +12,5 @@
     "Test Case 3 - Check the Music tab.Clicked on the arrow to move the cards": "TEST_STATUS_SUCCESS",
     "Test Case 3 - Check the Music tab.Found the element to be compared: tracks on the playlist": "TEST_STATUS_SUCCESS",
     "Test Case 4 - Check the News tab.Clicked on the News tab": "TEST_STATUS_SUCCESS",
-    "Test Case 4 - Check the News tab.Found the element to be add up: number of likes on a post": "TEST_STATUS_SUCCESS",
-    "Test Case 5 - Search Keywords.TestNG Test Method 'testCase05' is not Implemented": "TEST_STATUS_FAILURE"
+    "Test Case 4 - Check the News tab.Found the element to be add up: number of likes on a post": "TEST_STATUS_SUCCESS"
 }
