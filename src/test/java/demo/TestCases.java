@@ -1,9 +1,10 @@
 package demo;
 
-import org.apache.xmlbeans.impl.xb.xsdschema.ListDocument.List;
+//import org.apache.xmlbeans.impl.xb.xsdschema.ListDocument.List;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeDriverService;
@@ -13,298 +14,212 @@ import org.openqa.selenium.logging.LoggingPreferences;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 import org.testng.asserts.SoftAssert;
-
+//import org.junit.Assert;
+import org.testng.Assert;
 import java.time.Duration;
+import java.util.List;
 import java.util.logging.Level;
 
 import demo.utils.ExcelDataProvider;
+// import io.github.bonigarcia.wdm.WebDriverManager;
 import demo.wrappers.Wrappers;
+//import dev.failsafe.internal.util.Assert;
 
-public class TestCases extends ExcelDataProvider {
-    private static final long timeoutInSeconds = 50; // Timeout for WebDriverWait
-    private WebDriver driver;
-    private Wrappers wrapper;
-    private SoftAssert softAssert;
+public class TestCases extends ExcelDataProvider { // Lets us read the data
+        ChromeDriver driver;
 
-    @BeforeTest
-    public void startBrowser() {
-        System.setProperty("java.util.logging.config.file", "logging.properties");
+        /*
+         * TODO: Write your tests here with testng @Test annotation.
+         * Follow testCase01 testCase02... format or what is provided in
+         * instructions
+         */
 
-        ChromeOptions options = new ChromeOptions();
-        LoggingPreferences logs = new LoggingPreferences();
+        /*
+         * Do not change the provided methods unless necessary, they will help in
+         * automation and assessment
+         */
+        @BeforeTest
+        public void startBrowser() {
+                System.setProperty("java.util.logging.config.file", "logging.properties");
 
-        logs.enable(LogType.BROWSER, Level.ALL);
-        logs.enable(LogType.DRIVER, Level.ALL);
-        options.setCapability("goog:loggingPrefs", logs);
-        options.addArguments("--remote-allow-origins=*");
+                // NOT NEEDED FOR SELENIUM MANAGER
+                // WebDriverManager.chromedriver().timeout(30).setup();
 
-        System.setProperty(ChromeDriverService.CHROME_DRIVER_LOG_PROPERTY, "build/chromedriver.log");
+                ChromeOptions options = new ChromeOptions();
+                LoggingPreferences logs = new LoggingPreferences();
 
-        driver = new ChromeDriver(options);
-        driver.manage().window().maximize();
+                logs.enable(LogType.BROWSER, Level.ALL);
+                logs.enable(LogType.DRIVER, Level.ALL);
+                options.setCapability("goog:loggingPrefs", logs);
+                options.addArguments("--remote-allow-origins=*");
 
-        // Initialize the Wrapper instance with the driver
-        wrapper = new Wrappers(driver);
-    }
+                System.setProperty(ChromeDriverService.CHROME_DRIVER_LOG_PROPERTY, "build/chromedriver.log");
 
-    @Test
-    public void testCase01() {
-        softAssert = new SoftAssert();
-    
-        try {
-            // Navigate to YouTube
-            wrapper.navigateTo("https://www.youtube.com");
-    
-            // Wait until the URL contains 'youtube.com' and assert it
-            new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
-                    .until(ExpectedConditions.urlContains("youtube.com"));
-            String currentUrl = driver.getCurrentUrl();
-            softAssert.assertTrue(currentUrl.contains("youtube.com"), "URL does not contain 'youtube.com'");
-            System.out.println("URL contains 'youtube.com'");
-    
-            // Click on "About" using the Wrapper class with XPath expression
-            By aboutLinkXPath = By.xpath("//a[@slot='guide-links-primary' and contains(text(),'About')]");
-            wrapper.click(aboutLinkXPath);
-    
-            // Wait for and print the message on the screen using Wrapper class and XPath
-            By messageXPath = By.xpath("//*[@id='content' and contains(@class,'ytabout__main lb-padding-top-xl lb-padding-bottom-xl')]");
-            String messageText = new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
-                    .until(ExpectedConditions.visibilityOfElementLocated(messageXPath))
-                    .getText();
-            System.out.println("Message on the screen: " + messageText);
-    
-        } catch (NoSuchElementException e) {
-            System.out.println("Element not found: " + e.getMessage());
+                driver = new ChromeDriver(options);
+
+                driver.manage().window().maximize();
         }
-    
-        // Assert all
-        softAssert.assertAll();
-    }
-    
 
+        @Test
+        public void testCase01() throws Exception {
+                Wrappers homePage = new Wrappers(driver);
+                homePage.navigateToYouTube();
+                String currentUrl = driver.getCurrentUrl();
+                boolean status = currentUrl.contains("youtube");
+                Assert.assertTrue(status);
+                homePage.scrollFunction("4000");
+                WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+                wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[text()='About']")));
+                WebElement aboutLink = driver.findElement(By.xpath("//a[text()='About']"));
+                homePage.clickOn(aboutLink);
+                Thread.sleep(5000);
+                String currentUrl1 = driver.getCurrentUrl();
 
-    @Test
-    public void testCase02() {
-        softAssert = new SoftAssert();
+                status = currentUrl1.contains("about");
+                System.out.println("Moved to About Page");
+                Assert.assertTrue(status);
+                homePage.scrollFunction("3000");
+                WebElement aboutText = driver
+                                .findElement(By.xpath("//p[@class='lb-font-display-3 lb-font-color-text-primary'][2]"));
+                String text = aboutText.getText();
+                status = text.contains(" and that the world is a better place when we listen");
 
-        try {
-            // Navigate to YouTube Movies tab
-            wrapper.navigateTo("https://www.youtube.com/feed/storefront");
-
-            // Wait for the "Top Selling" section to appear
-            By topSellingSectionXPath = By.xpath("//span[@id='title' and contains(text(), 'Top selling')]");
-            WebElement topSellingSection = new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
-                    .until(ExpectedConditions.visibilityOfElementLocated(topSellingSectionXPath));
-            System.out.println("Located the Top Selling section.");
-
-            // Scroll to the extreme right by clicking the next arrow button using a for loop
-            boolean canScroll = true;
-            int maxScrollAttempts = 10;
-            for (int i = 0; i < maxScrollAttempts && canScroll; i++) {
-                try {
-                    WebElement nextArrow = new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
-                            .until(ExpectedConditions.elementToBeClickable(By.xpath("//button[@aria-label='Next']")));
-                    nextArrow.click();
-                    System.out.println("Clicked the next arrow to scroll right.");
-                } catch (NoSuchElementException e) {
-                    System.out.println("Reached the extreme right of the Top Selling section.");
-                    canScroll = false;
+                if (text.contains(" and that the world is a better place when we listen")
+                                && currentUrl1.contains("about")) {
+                        status = true;
+                        System.out.println("Page contains url about and the message displayed");
+                } else {
+                        status = false;
                 }
-            }
-
-            // Find the last movie by using XPath to locate the last visible movie element
-            WebElement lastMovie = new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
-                    .until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//ytd-grid-movie-renderer[last()]")));
-            System.out.println("Located the last movie in the Top Selling section.");
-
-            // Click on the last movie
-            lastMovie.click();
-            System.out.println("Clicked on the last movie: " + lastMovie.getText());
-            Thread.sleep(3000);
-
-            // Check for maturity label
-            WebElement maturityLabel = new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
-                    .until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[contains(text(), 'A')]")));
-            softAssert.assertNotNull(maturityLabel, "Movie is not marked 'A' for Mature.");
-
-            // Check for movie category
-            WebElement categoryElement = new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
-                    .until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//span[@id='title']")));
-            softAssert.assertNotNull(categoryElement, "Movie category is not one of the expected categories.");
-
-        } catch (Exception e) {
-            System.out.println("Error occurred: " + e.getMessage());
-        } finally {
-            softAssert.assertAll();
+                Assert.assertTrue(status);
+                System.out.println(text);
+                System.out.println("Printed the TEXT");
         }
-    }
 
-    @Test
-    public void testCase03() {
-        softAssert = new SoftAssert();
-
-        try {
-            // Navigate to YouTube
-            wrapper.navigateTo("https://www.youtube.com/");
-
-            // Click on the "Music" tab
-            By musicTabXPath = By.xpath("//a[@id='endpoint' and contains(@title, 'Music')]");
-            wrapper.click(musicTabXPath);
-            System.out.println("Clicked on the Music tab.");
-            Thread.sleep(3000);
-
-            // Locate the first section
-            By firstSectionXPath = By.xpath("//div[@id='dismissible' and contains(@class,'style-scope ytd-shelf-renderer')]");
-            WebElement firstSection = new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
-                    .until(ExpectedConditions.visibilityOfElementLocated(firstSectionXPath));
-            System.out.println("Located the first section.");
-
-            // Scroll to the extreme right within the first section
-            wrapper.scrollHorizontally(firstSection);
-            System.out.println("Scrolled to the extreme right in the first section.");
-
-            // Wait for the playlist name to be visible
-            By playlistNameXPath = By.xpath("//*[@class='yt-simple-endpoint style-scope ytd-compact-station-renderer']");
-            WebElement playlistNameElement = new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
-                    .until(ExpectedConditions.visibilityOfElementLocated(playlistNameXPath));
-
-            if (!playlistNameElement.isDisplayed()) {
-                System.out.println("Playlist name element is not visible, trying to scroll again.");
-                wrapper.scrollHorizontally(firstSection);
-                playlistNameElement = new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
-                        .until(ExpectedConditions.visibilityOfElementLocated(playlistNameXPath));
-            }
-
-            String playlistName = playlistNameElement.getText();
-            System.out.println("Playlist Name: " + playlistName);
-
-            // Check the number of tracks listed
-            By trackCountXPath = By.xpath("//p[@id='video-count-text']");
-            WebElement trackCountElement = new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
-                    .until(ExpectedConditions.visibilityOfElementLocated(trackCountXPath));
-            String trackCountText = trackCountElement.getText();
-            System.out.println("Track Details: " + trackCountText);
-
-            // Perform soft assert on the number of tracks
-            int trackCount = Integer.parseInt(trackCountText.split(" ")[0]);
-            softAssert.assertTrue(trackCount <= 50, "The number of tracks is more than 50.");
-
-        } catch (Exception e) {
-            System.out.println("Error occurred: " + e.getMessage());
-        } finally {
-            softAssert.assertAll();
-        }
-    }
-
-    @Test
-    public void testCase04() {
-        softAssert = new SoftAssert();
-
-        try {
-            // Navigate to YouTube
-            wrapper.navigateTo("https://www.youtube.com/");
-
-            // Click on the "News" tab
-            By newsTabXPath = By.xpath("//a[@id='endpoint' and contains(@title, 'News')]");
-            wrapper.click(newsTabXPath);
-            System.out.println("Clicked on the News tab.");
-
-            // Initialize variables to store the total likes and iterate over the first 3 news posts
-            int totalLikes = 0;
-
-            for (int i = 1; i <= 3; i++) {
-                // Locate the title of the news post
-                By newsTitleXPath = By.xpath("//div[@id='author' and contains(@class,'style-scope ytd-post-renderer')][" + i + "]");
-                WebElement newsTitleElement = new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
-                        .until(ExpectedConditions.visibilityOfElementLocated(newsTitleXPath));
-                String newsTitle = newsTitleElement.getText();
-                System.out.println("News Title: " + newsTitle);
-
-                // Locate the number of likes (if available)
-                By likesXPath = By.xpath("//yt-formatted-string[@class='style-scope ytd-toggle-button-renderer style-text']");
-                WebElement likesElement = new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
-                        .until(ExpectedConditions.visibilityOfElementLocated(likesXPath));
-                String likesText = likesElement.getText().replaceAll("[^0-9]", "");
-                int likes = likesText.isEmpty() ? 0 : Integer.parseInt(likesText);
-                totalLikes += likes;
-                System.out.println("Number of Likes: " + likes);
-            }
-
-            // Output the total number of likes for the three posts
-            System.out.println("Total Likes for the first 3 news posts: " + totalLikes);
-
-        } catch (Exception e) {
-            System.out.println("Error occurred: " + e.getMessage());
-        } finally {
-            softAssert.assertAll();
-        }
-    }
-    public class YouTubeTestCases extends ExcelDataProvider {
-        private static final long timeoutInSeconds = 10;
-        @Test(dataProvider = "getData")
-        public void testCase05(String keyword) {
-            SoftAssert softAssert = new SoftAssert();
-        
-            try {
-                // Navigate to YouTube
-                wrapper.navigateTo("https://www.youtube.com");
-        
-                // Enter the keyword in the search box and submit
-                By searchBoxXPath = By.name("search_query");
-                wrapper.click(searchBoxXPath);
-                driver.findElement(searchBoxXPath).sendKeys(keyword);
-                driver.findElement(searchBoxXPath).submit();
-        
-                // Wait for the search results to load
-                By videoElementsXPath = By.xpath("//ytd-video-renderer//span[@class='view-count style-scope ytd-video-meta-block']");
-                new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
-                        .until(ExpectedConditions.visibilityOfElementLocated(videoElementsXPath));
-        
-                // Initialize the total view count
-                long totalViews = 0;
-        
-                while (totalViews < 100_000_000) { // 100 million views
-                    // Locate the first visible video element with the view count
-                    WebElement videoElement = new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
-                            .until(ExpectedConditions.visibilityOfElementLocated(videoElementsXPath));
-        
-                    // Extract the view count from the video element
-                    String viewsText = videoElement.getText().split(" ")[0]
-                            .replace(",", "").replace("K", "000").replace("M", "000000");
-                    long views = Long.parseLong(viewsText);
-        
-                    // Accumulate the views
-                    totalViews += views;
-        
-                    // Scroll down to load more videos
-                    wrapper.scrollDown();
+        @Test
+        public void testCase02() throws InterruptedException {
+                Wrappers homePage = new Wrappers(driver);
+                homePage.navigateToYouTube();
+                Thread.sleep(3000);
+                homePage.scrollFunction("4000");
+                WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+                wait.until(ExpectedConditions.presenceOfElementLocated(
+                                By.xpath("//yt-formatted-string[text()='Movies']//ancestor::a")));
+                WebElement moviesButton = driver
+                                .findElement(By.xpath("//yt-formatted-string[text()='Movies']//ancestor::a"));
+                homePage.clickOn(moviesButton);
+                Thread.sleep(4000);
+                homePage.scrollFunction("4000");
+                wait.until(ExpectedConditions.presenceOfElementLocated(
+                                By.xpath("//span[text()='Top selling']/ancestor::div[@class='grid-subheader style-scope ytd-shelf-renderer']/following-sibling::div[@id='contents']//button[@aria-label='Next']")));
+                WebElement nextButton = driver
+                                .findElement(By.xpath(
+                                                "//span[text()='Top selling']/ancestor::div[@class='grid-subheader style-scope ytd-shelf-renderer']/following-sibling::div[@id='contents']//button[@aria-label='Next']"));
+                while (nextButton.isDisplayed()) {
+                        Thread.sleep(5000);
+                        homePage.clickOn(nextButton);
                 }
-        
-                System.out.println("Total views for keyword '" + keyword + "' reached 10 crore.");
-        
-            } catch (Exception e) {
-                System.out.println("Error occurred while processing keyword '" + keyword + "': " + e.getMessage());
-            } finally {
-                softAssert.assertAll();
-            }
+                homePage.movieCollection("Top selling");
         }
-        
 
-
-    @AfterTest
-    public void closeBrowser() {
-        if (driver != null) {
-            driver.quit();
+        @Test
+        public void testCase03() throws InterruptedException {
+                Wrappers homePage = new Wrappers(driver);
+                homePage.navigateToYouTube();
+                Thread.sleep(3000);
+                homePage.scrollFunction("4000");
+                WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+                wait.until(ExpectedConditions.presenceOfElementLocated(
+                                By.xpath("//yt-formatted-string[text()='Music']/parent::tp-yt-paper-item/parent::a")));
+                WebElement musicButton = driver.findElement(
+                                By.xpath("//yt-formatted-string[text()='Music']/parent::tp-yt-paper-item/parent::a"));
+                homePage.clickOn(musicButton);
+                // Thread.sleep(4000);
+                homePage.scrollFunction("60000");
+                wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(
+                                "//span[contains(text(),'Biggest Hits') and @id='title']/ancestor::div[@class='grid-subheader style-scope ytd-shelf-renderer']/following-sibling::div[@id='contents']//button[@aria-label='Next']")));
+                WebElement nextButton = driver.findElement(By.xpath(
+                                "//span[contains(text(),'Biggest Hits') and @id='title']/ancestor::div[@class='grid-subheader style-scope ytd-shelf-renderer']/following-sibling::div[@id='contents']//button[@aria-label='Next']"));
+                while (nextButton.isDisplayed()) {
+                        Thread.sleep(2000);
+                        homePage.clickOn(nextButton);
+                }
+                homePage.musicCollection("Biggest Hits");
         }
-    }
-}
-}
 
-    // public Object[][] fetchExcelData(String string) {
-    //     // TODO Auto-generated method stub
-    //     throw new UnsupportedOperationException("Unimplemented method 'fetchExcelData'");
-    // }
+        @Test
+        public void testCase04() throws InterruptedException {
+                Wrappers homePage = new Wrappers(driver);
+                homePage.navigateToYouTube();
+                Thread.sleep(20000);
+                homePage.scrollFunction("4000");
+                WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+                
+                wait.until(ExpectedConditions.presenceOfElementLocated(
+                                By.xpath("//yt-formatted-string[text()='News']/parent::tp-yt-paper-item/parent::a")));
+                WebElement musicButton = driver.findElement(
+                                By.xpath("//yt-formatted-string[text()='News']/parent::tp-yt-paper-item/parent::a"));
+                homePage.clickOn(musicButton);
+                homePage.scrollFunction("60000");
+                Thread.sleep(10000);
+                homePage.topThreeNews("Latest news posts");
 
+        }
+
+        @Test(dataProvider = "excelData")
+        public void testCase05(String tobeSearched) throws InterruptedException {
+                WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+                Wrappers homePage = new Wrappers(driver);
+                homePage.navigateToYouTube();
+                WebElement element1 = driver.findElement(By.xpath("//input[@id='search']"));
+                element1.sendKeys(tobeSearched);
+                element1.sendKeys(Keys.ENTER);
+                wait.until(ExpectedConditions.presenceOfElementLocated(
+                                By.xpath("//ytd-video-renderer/div[@id='dismissible']//span[contains(text(),'views')]")));
+                List<WebElement> videoList = driver.findElements(By
+                                .xpath("//ytd-video-renderer/div[@id='dismissible']//span[contains(text(),'views')]"));
+                long sum = 0;
+                for (WebElement videos : videoList) {
+
+                        String viewsText = videos.getText();
+                        String viewsText1 = viewsText.trim();
+                        String arr[] = viewsText1.split(" ");
+                        String val = arr[0];
+                        System.out.println("view for single video : " + val);
+                        long viewsNum = 0;
+                        String numericString = "";
+                        if (val.contains("M")) {
+                                numericString = val.replace("M", "");
+                                if (numericString.contains(".")) {
+                                        viewsNum = (long) (Double.parseDouble(numericString) * 1000000);
+                                } else {
+                                        viewsNum = Integer.parseInt(numericString) * 1000000;
+                                }
+                        } else if (val.contains("K")) {
+                                numericString = val.replace("K", "");
+                                if (numericString.contains(".")) {
+                                        viewsNum = (long) (Double.parseDouble(numericString) * 1000);
+                                } else {
+                                        viewsNum = Integer.parseInt(numericString) * 1000;
+                                }
+                        }
+                        sum = sum + viewsNum;
+                        homePage.scrollFunction("5000");
+                        if (sum >= 100000000) {
+                                break;
+                        }
+                }
+                System.out.println("Total views are : " + sum);
+        }
+
+        @AfterTest
+        public void endTest() {
+                driver.close();
+                driver.quit();
+
+        }
+}
