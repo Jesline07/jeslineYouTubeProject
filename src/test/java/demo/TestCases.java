@@ -84,7 +84,7 @@ public class TestCases extends ExcelDataProvider { // Lets us read the data
                 Assert.assertTrue(status);
                 homePage.scrollFunction("3000");
                 WebElement aboutText = driver
-                                .findElement(By.xpath("//p[@class='lb-font-display-3 lb-font-color-text-primary'][2]"));
+                                .findElement(By.xpath("//*[@id='content' and contains(@class,'ytabout__main lb-padding-top-xl lb-padding-bottom-xl')]"));
                 String text = aboutText.getText();
                 status = text.contains(" and that the world is a better place when we listen");
 
@@ -97,7 +97,7 @@ public class TestCases extends ExcelDataProvider { // Lets us read the data
                 }
                 Assert.assertTrue(status);
                 System.out.println(text);
-                System.out.println("Printed the TEXT");
+                System.out.println("Printed the  About Message");
         }
 
         @Test
